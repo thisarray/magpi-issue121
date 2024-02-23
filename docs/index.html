@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MagPet</title>
+  <script src="../jsgame0.js"></script>
+  <style type="text/css" media="screen">
+body {
+  background-color: white;
+  color: black;
+}
+.hidden {
+  display: none;
+}
+#original {
+  margin-left: 1em;
+}
+  </style>
+</head>
+
+<body>
+<section id="imageLoader" class="hidden">
+  <img class="hidden" src="images/clean.png" alt="clean" data-name="clean">
+  <img class="hidden" src="images/emptyheart.png" alt="emptyheart" data-name="emptyheart">
+  <img class="hidden" src="images/feed.png" alt="feed" data-name="feed">
+  <img class="hidden" src="images/fullheart.png" alt="fullheart" data-name="fullheart">
+  <img class="hidden" src="images/halfheart.png" alt="halfheart" data-name="halfheart">
+  <img class="hidden" src="images/hungry.png" alt="hungry" data-name="hungry">
+  <img class="hidden" src="images/pet.png" alt="pet" data-name="pet">
+  <img class="hidden" src="images/pet1.png" alt="pet1" data-name="pet1">
+  <img class="hidden" src="images/pet2.png" alt="pet2" data-name="pet2">
+  <img class="hidden" src="images/poop.png" alt="poop" data-name="poop">
+</section>
+
+<main>
+<h1>MagPet</h1>
+
+<canvas id="screen">
+The game screen appears here if your browser supports the Canvas API.
+</canvas>
+<section id="controls">
+  <button type="button" id="reset">Reset</button>
+  <button type="button" id="pause">Pause</button>
+</section>
+
+<h2>Attribution</h2>
+
+<p><a href="https://magpi.raspberrypi.com/issues/121">MagPet - code a Python virtual pet, pages 44 - 47, by Rob Zwetsloot</a>.</p>
+
+<p>Licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/legalcode">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported</a>.</p>
+
+<h2>Original Python code</h2>
+
+<pre id="original"><code>
+import pygame
+import random
+
+# Game info
+
+display_width = 200
+display_height = 300
+
+bg_colour = (160, 178, 129)
+
+pet_x = 100
+pet_y = 100
+
+# Variables for the pet
+
+hunger = 2
+happiness = 20
+waste = 0
+wastexy = {}
+button_press = 0
+pet_counter = 0
+walk_cycle = 0
+
+# Images, including two images for pet idle animation
+
+pet_1 = pygame.image.load(&quot;sprites/pet1.png&quot;)
+pet_2 = pygame.image.load(&quot;sprites/pet2.png&quot;)
+full_heart = pygame.image.load(&quot;sprites/fullheart.png&quot;)
+half_heart = pygame.image.load(&quot;sprites/halfheart.png&quot;)
+empty_heart = pygame.image.load(&quot;sprites/emptyheart.png&quot;)
+hungry = pygame.image.load(&quot;sprites/hungry.png&quot;)
+poop = pygame.image.load(&quot;sprites/poop.png&quot;)
+clean_button = pygame.image.load(&quot;sprites/clean.png&quot;)
+feed_button = pygame.image.load(&quot;sprites/feed.png&quot;)
+pet_button = pygame.image.load(&quot;sprites/pet.png&quot;)
+
+# Game functions
+# Pet location
+
+def pet(pet_x,pet_y,game_display):
+    global walk_cycle
+    if walk_cycle == 0:
+        game_display.blit(pet_1, (pet_x,pet_y))
+    else:
+        game_display.blit(pet_2, (pet_x,pet_y))
+
+# Pet movement.
+# There are checks so it won&#x27;t move beyond the boundaries
+
+def movement(move, game_display):
+    global pet_x, pet_y
+    if move == 1:
+        pet_y -= 10
+    if move == 2:
+        pet_x += 10
+    if move == 3:
+        pet_y += 10
+    if move == 4:
+        pet_x -= 10
+    if pet_x &lt; 10:
+        pet_x = 10
+    if pet_x &gt; 190:
+        pet_x = 190
+    if pet_y &lt; 10:
+        pet_y = 10
+    if pet_y &gt; 190:
+        pet_y = 190
+    pet(pet_x, pet_y, game_display)
+
+# Happiness as displayed by hearts
+# Each heart is worth 20 points
+
+def hearts(game_display):
+    global happiness
+    if happiness &lt; 1:
+        game_display.blit(empty_heart, (40,215))
+    if happiness &gt; 0 and happiness &lt; 15:
+        game_display.blit(half_heart, (40,215))
+    if happiness &gt; 14:
+        game_display.blit(full_heart, (40,215))
+    if happiness &lt; 25:
+        game_display.blit(empty_heart, (80,215))
+        game_display.blit(empty_heart, (120,215))
+    if happiness &gt; 24 and happiness &lt; 35 :
+        game_display.blit(half_heart, (80,215))
+    if happiness &gt; 34:
+        game_display.blit(full_heart, (80,215))
+    if happiness &lt; 45:
+        game_display.blit(empty_heart, (120,215))
+    if happiness &gt; 44 and happiness &lt; 55:
+        game_display.blit(half_heart, (120,215))
+    if happiness &gt; 54:
+        game_display.blit(full_heart, (120,215))
+
+# Poop location
+
+def poopxy(waste,pet_x,pet_y,game_display):
+    global wastexy
+    if int(waste) &gt; len(wastexy):
+        wastexy[((int(waste))-1)] = ((pet_x + 5), pet_y)
+        prev_waste = int(waste)
+
+    for i in wastexy:
+        game_display.blit(poop, wastexy[i])
+
+# Hunger and happiness cycle
+
+def pet_cycle(pet_x, pet_y, game_display):
+    global hunger, happiness, waste
+    if hunger &lt; 10:
+        hunger += 0.2
+    if hunger &gt; 7:
+        game_display.blit(hungry, ((pet_x + 25),(pet_y - 30)))
+    if happiness &gt; 0:
+        happiness -= 0.05
+        if waste &gt; 3:
+            happiness -= 0.4
+        if hunger &gt; 9:
+            happiness -= 0.2
+    hearts(game_display)
+    if waste &lt; 5:
+        waste += 0.1
+    if int(waste) &gt; 0:
+        poopxy(waste,pet_x,pet_y,game_display)
+
+# Button locations for press
+
+def button_pressed(mousex, mousey):
+    global button_press
+    if mousey &lt; 250:
+        return 0
+    else:
+        if mousex &gt;= 0 and mousex &lt;= 60:
+            return 1
+        elif mousex &gt;= 70 and mousex &lt;= 130:
+            return 2
+        elif mousex &gt;= 140 and mousex &lt;= 200:
+            return 3
+        else:
+            return 0
+
+# Main game loop
+
+def main():
+    pygame.init
+    clock = pygame.time.Clock()
+    game_display = pygame.display.set_mode((display_width, display_height))
+    pygame.display.set_caption(&quot;MagPet&quot;)
+    move = 0
+    global pet_x, pet_y, happiness, hunger, waste, button_press, pet_counter, walk_cycle
+
+    while True:
+        game_display.fill(bg_colour)
+        game_display.blit(feed_button, (0,250))
+        game_display.blit(pet_button, (70,250))
+        game_display.blit(clean_button, (140,250))
+        mousex = 0
+        mousey = 0
+
+        # Event handler
+        for current_event in pygame.event.get():
+            if current_event.type == pygame.QUIT:
+                pygame.quit()
+            elif current_event.type == pygame.MOUSEBUTTONUP:
+                mousex, mousey = current_event.pos
+                button_press = button_pressed(mousex, mousey)
+
+        # How does the pet move - 1-4 are cardinal directions
+        if move == 0:
+            move = random.randint(0,4)
+
+        if move &gt; 0:
+            if random.randint(1,10) &gt; 4:
+                movement(move, game_display)
+            else:
+                move = random.randint(0,4)
+                movement(move, game_display)
+
+        if button_press != 0:
+            if button_press == 1:
+                hunger = 0
+                happiness += 10
+                button_press = 0
+            if button_press == 2:
+                if pet_counter &gt; 0:
+                    button_press = 0
+                else:
+                    happiness += 10
+                    pet_counter = 5
+                    button_press = 0
+            if button_press == 3:
+                waste = 0
+                wastexy = {}
+                button_press = 0
+
+        if pet_counter &gt; 0:
+            pet_counter -= 1
+
+        if happiness &lt; 0 and int(waste) == 5 and hunger &gt; 10:
+            print (&quot;Game Over&quot;)
+        else:
+            pet_cycle(pet_x, pet_y, game_display)
+            pygame.display.update()
+
+            if walk_cycle == 0:
+                walk_cycle = 1
+            else:
+                walk_cycle = 0
+
+            if pet_counter &gt; 0:
+                pet_counter -= 1
+
+            clock.tick(2)
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()
+</code></pre>
+</main>
+
+<script>
+// Game info
+
+WIDTH = 200;
+HEIGHT = 300;
+TITLE = "MagPet";
+
+const BG_COLOUR = [160, 178, 129];
+
+/*
+ * Integer number of frames per second.
+ */
+const FPS = 2;
+
+/*
+ * Return a random integer N such that min <= N < max.
+ */
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor((Math.random() * (max - min)) + min);
+}
+
+class Pet extends Actor {
+  constructor() {
+    super('pet1');
+    this.topleft = [100, 100];
+
+    this.hunger = 2;
+    this.happiness = 20;
+    this.waste = 0;
+    this.wastexy = [];
+    this.pet_counter = 0;
+    this.walk_cycle = 1;
+    this.dead = false;
+
+    this.timer = 0;
+  }
+
+  /*
+   * Happiness as displayed by hearts
+   * Each heart is worth 20 points
+   */
+  hearts() {
+    if (this.happiness < 1) {
+      screen.blit('emptyheart', [40, 215]);
+    }
+    if ((this.happiness > 0) && (this.happiness < 15)) {
+      screen.blit('halfheart', [40, 215]);
+    }
+    if (this.happiness > 14) {
+      screen.blit('fullheart', [40, 215]);
+    }
+    if (this.happiness < 25) {
+      screen.blit('emptyheart', [80, 215]);
+      screen.blit('emptyheart', [120, 215]);
+    }
+    if ((this.happiness > 24) && (this.happiness < 35)) {
+      screen.blit('halfheart', [80, 215]);
+    }
+    if (this.happiness > 34) {
+      screen.blit('fullheart', [80, 215]);
+    }
+    if (this.happiness < 45) {
+      screen.blit('emptyheart', [120, 215]);
+    }
+    if ((this.happiness > 44) && (this.happiness < 55)) {
+      screen.blit('halfheart', [120, 215]);
+    }
+    if (this.happiness > 34) {
+      screen.blit('fullheart', [120, 215]);
+    }
+  }
+
+  draw() {
+    this.name = 'pet' + this.walk_cycle;
+    super.draw();
+    this.hearts();
+    for (let [x, y] of this.wastexy) {
+      screen.blit('poop', [x, y]);
+    }
+    if (this.hunger > 7) {
+      screen.blit('hungry', [pet.x + 25, pet.y - 30]);
+    }
+  }
+
+  update(dt) {
+    if (this.dead) {
+      return;
+    }
+
+    this.timer += dt;
+    if (this.timer < (1 / FPS)) {
+      return;
+    }
+    this.timer = 0;
+
+    // How does the pet move - 1-4 are cardinal directions
+    let move = getRandomInteger(0, 5);
+
+    if (move > 0) {
+      if (getRandomInteger(1, 11) > 4) {
+        this.movement(move);
+      }
+      else {
+        this.movement(getRandomInteger(0, 5));
+      }
+    }
+
+    if (this.pet_counter > 0) {
+      this.pet_counter -= 1;
+    }
+
+    if ((this.happiness < 0) && (Math.trunc(this.waste) === 5) && (this.hunger > 10)) {
+      this.dead = true;
+      return;
+    }
+
+    // Hunger and happiness cycle
+
+    if (this.hunger < 10) {
+      this.hunger += 0.2;
+    }
+    if (this.happiness > 0) {
+      this.happiness -= 0.05;
+      if (this.waste > 3) {
+        this.happiness -= 0.4;
+      }
+      if (this.hunger > 9) {
+        this.happiness -= 0.2;
+      }
+    }
+    if (this.waste < 5) {
+      this.waste += 0.1;
+    }
+    if (Math.trunc(this.waste) > this.wastexy.length) {
+      this.wastexy.push([pet.x + 5, pet.y]);
+    }
+
+    if (this.walk_cycle === 1) {
+      this.walk_cycle = 2;
+    }
+    else {
+      this.walk_cycle = 1;
+    }
+
+    if (this.pet_counter > 0) {
+      this.pet_counter -= 1;
+    }
+  }
+
+  /*
+   * Pet movement.
+   * There are checks so it won't move beyond the boundaries
+   */
+  movement(move) {
+    if (move === 1) {
+      pet.y -= 10;
+    }
+    if (move === 2) {
+      pet.x += 10;
+    }
+    if (move === 3) {
+      pet.y += 10;
+    }
+    if (move === 4) {
+      pet.x -= 10;
+    }
+    if (pet.x < 10) {
+      pet.x = 10;
+    }
+    if (pet.x > 190) {
+      pet.x = 190;
+    }
+    if (pet.y < 10) {
+      pet.y = 10;
+    }
+    if (pet.y > 190) {
+      pet.y = 190;
+    }
+  }
+}
+
+let pet, clean_button, feed_button, pet_button;
+
+function reset() {
+  pet = new Pet();
+
+  clean_button = new Actor('clean');
+  clean_button.topleft = [140, 250];
+  feed_button = new Actor('feed');
+  feed_button.topleft = [0, 250];
+  pet_button = new Actor('pet');
+  pet_button.topleft = [70, 250];
+}
+
+function draw() {
+  screen.fill(BG_COLOUR);
+  clean_button.draw();
+  feed_button.draw();
+  pet_button.draw();
+  pet.draw();
+  if (pet.dead) {
+    screen.draw.text("Game Over", {
+      center: [Math.floor(WIDTH / 2), Math.floor(HEIGHT / 2)]
+    });
+  }
+}
+
+function update(dt) {
+  pet.update(dt);
+}
+
+function on_mouse_down(pos) {
+  if (feed_button.collidepoint(pos)) {
+    pet.hunger = 0;
+    pet.happiness += 10;
+  }
+  if (pet_button.collidepoint(pos)) {
+    if (pet.pet_counter <= 0) {
+      pet.happiness += 10;
+      pet.pet_counter = 5;
+    }
+  }
+  if (clean_button.collidepoint(pos)) {
+    pet.waste = 0;
+    pet.wastexy = [];
+  }
+}
+
+window.addEventListener('load', (event) => {
+  screen.init();
+});
+</script>
+</body>
+
+</html>
