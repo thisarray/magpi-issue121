@@ -7,3 +7,5 @@ Link to repositories for 'Super Simple Robotics': [magpi.cc/testlinepy](https://
 Link to repository for 'Learn ARM Assembly': [magpi.cc/learnassembly6](https://magpi.cc/learnassembly6)
 
 Link to repository for 'Build a Raspberry Radio': [magpi.cc/newsreader](https://magpi.cc/newsreader)
+
+[Run the JavaScript port of MagPet in your browser.](https://thisarray.github.io/magpi-issue121/)
