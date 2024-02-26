@@ -356,7 +356,7 @@ class Pet extends Actor {
       screen.blit('poop', [x, y]);
     }
     if (this.hunger > 7) {
-      screen.blit('hungry', [pet.x + 25, pet.y - 30]);
+      screen.blit('hungry', [this.x + 25, this.y - 30]);
     }
   }
 
@@ -410,7 +410,7 @@ class Pet extends Actor {
       this.waste += 0.1;
     }
     if (Math.trunc(this.waste) > this.wastexy.length) {
-      this.wastexy.push([pet.x + 5, pet.y]);
+      this.wastexy.push([this.x + 5, this.y]);
     }
 
     if (this.walk_cycle === 1) {
@@ -431,28 +431,28 @@ class Pet extends Actor {
    */
   movement(move) {
     if (move === 1) {
-      pet.y -= 10;
+      this.y -= 10;
     }
     if (move === 2) {
-      pet.x += 10;
+      this.x += 10;
     }
     if (move === 3) {
-      pet.y += 10;
+      this.y += 10;
     }
     if (move === 4) {
-      pet.x -= 10;
+      this.x -= 10;
     }
-    if (pet.x < 10) {
-      pet.x = 10;
+    if (this.x < 10) {
+      this.x = 10;
     }
-    if (pet.x > 190) {
-      pet.x = 190;
+    if (this.x > 190) {
+      this.x = 190;
     }
-    if (pet.y < 10) {
-      pet.y = 10;
+    if (this.y < 10) {
+      this.y = 10;
     }
-    if (pet.y > 190) {
-      pet.y = 190;
+    if (this.y > 190) {
+      this.y = 190;
     }
   }
 }
