@@ -313,33 +313,37 @@ class Poop extends Actor {
     }
     this.timer = 0;
 
-    this.movement(this.move);
+    this.movement();
   }
 
-  movement(move) {
-    if (move === 1) {
+  movement() {
+    if (this.move === 1) {
       this.y -= 10;
     }
-    if (move === 2) {
+    if (this.move === 2) {
       this.x += 10;
     }
-    if (move === 3) {
+    if (this.move === 3) {
       this.y += 10;
     }
-    if (move === 4) {
+    if (this.move === 4) {
       this.x -= 10;
     }
     if (this.x < 10) {
-      this.x = 10;
+      this.left = 10;
+      this.move = 0;
     }
     if (this.x > 190) {
-      this.x = 190;
+      this.right = 190;
+      this.move = 0;
     }
     if (this.y < 10) {
-      this.y = 10;
+      this.top = 10;
+      this.move = 0;
     }
     if (this.y > 190) {
-      this.y = 190;
+      this.bottom = 190;
+      this.move = 0;
     }
   }
 }
