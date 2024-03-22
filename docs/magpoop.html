@@ -461,7 +461,7 @@ class Pet extends Actor {
       this.waste += 0.1;
     }
     if (Math.trunc(this.waste) > this.wastexy.length) {
-      this.wastexy.push(new Poop(this.x + 5, this.y, getRandomInteger(0, 5)));
+      this.poop();
     }
 
     if (this.walk_cycle === 1) {
@@ -506,6 +506,10 @@ class Pet extends Actor {
       this.y = 190;
     }
   }
+
+  poop() {
+    this.wastexy.push(new Poop(this.x + 5, this.y, getRandomInteger(0, 5)));
+  }
 }
 
 let pet, clean_button, feed_button, pet_button;
@@ -539,6 +543,10 @@ function update(dt) {
   for (let poop of pet.wastexy) {
     poop.update(dt);
   }
+}
+
+function on_key_down(key) {
+  pet.poop();
 }
 
 function on_mouse_down(pos) {
